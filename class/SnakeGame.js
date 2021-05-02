@@ -9,7 +9,8 @@ class SnakeGame {
     this.map = new Map();
     const {
       isStartGame = false,
-      isGameOver = false,
+      isEndGame = false,
+      isWinner = false,
       apple = new Apple({
         appleSize: this.map.gridSize,
         position: new Position(this.map.gridSize, this.map.gridSize),
@@ -22,7 +23,8 @@ class SnakeGame {
     } = props || {};
 
     this.isStartGame = isStartGame;
-    this.isGameOver = isGameOver;
+    this.isEndGame = isEndGame;
+    this.isWinner = isWinner;
     this.apple = new Apple(apple);
     this.snake = new Snake(snake);
     this.fps = fps;

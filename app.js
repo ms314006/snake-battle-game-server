@@ -91,7 +91,7 @@ io.on('connection', socket => {
 const startSnakeGame = (playerRoomId) => {
   const players = Object.keys(roomsMap[playerRoomId]);
   players.forEach((playerId, index) => {
-    const { socket, snakeGame } = roomsMap[playerRoomId][playerId];
+    let { socket, snakeGame } = roomsMap[playerRoomId][playerId];
     const competitor = roomsMap[playerRoomId][players[index === 1 ? 0 : 1]];
 
     if (snakeGame.snake.isAteApple(snakeGame.apple.position)) {
@@ -103,16 +103,30 @@ const startSnakeGame = (playerRoomId) => {
     const nextSnakeHeadPosition = snakeGame.generateNextSnakePosition();
 
     if (snakeGame.isStartGame && snakeGame.snake.isTouchBody(nextSnakeHeadPosition)) {
-      /*
-      setSnakeGame(new SnakeGame({ ...snakeGame, isGameOver: true }));
-      */
-      return;
+      snakeGame = new SnakeGame({ ...snakeGame, isEndGame: true, isWinner: false });
+      competitor.snakeGame =  new SnakeGame({
+        ...competitor.snakeGame,
+        isWinner: true,
+        isEndGame: true
+      });
+      socket.emit(
+        'updateSnakeGame',
+        { playerId, snakeGame, competitorSnakeGame: competitor.snakeGame }
+      );
+      competitor.socket.emit(
+        'updateSnakeGame',
+        { playerId, snakeGame: competitor.snakeGame, competitorSnakeGame: snakeGame }
+      );
+      clearInterval(intervalMap[playerRoomId]);
+      delete intervalMap[playerRoomId];
     }
     snakeGame.snake.headPosition = nextSnakeHeadPosition;
 
-    socket.emit(
-      'updateSnakeGame',
-      { playerId, snakeGame, competitorSnakeGame: competitor.snakeGame }
-    );
+    if (!snakeGame.isEndGame && !competitor.snakeGame.isEndGame) {
+      socket.emit(
+        'updateSnakeGame',
+        { playerId, snakeGame, competitorSnakeGame: competitor.snakeGame }
+      );
+    }
   });
 }
