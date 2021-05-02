@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const { v4: uuidv4 } = require('uuid');
+const SnakeGame = require('./class/SnakeGame');
 const app = express();
 
 app.use(cors());
@@ -17,6 +18,7 @@ const io = require('socket.io')(server, {
 
 const socketQueue = [];
 const roomsMap = {};
+const intervalMap = {};
 
 io.on('connection', socket => {
   socketQueue.unshift(socket);
@@ -29,32 +31,83 @@ io.on('connection', socket => {
     });
   }
 
-  socket.on('joinInToRoom', (roomId) => {
-    if (roomsMap[roomId] === undefined) {
-      roomsMap[roomId] = [];
+  socket.on('joinInToRoom', ({ playerId, playerRoomId }) => {
+    if (roomsMap[playerRoomId] === undefined) {
+      roomsMap[playerRoomId] = {};
     }
-    socket.join(roomId);
-    roomsMap[roomId].push(socket);
-    if (roomsMap[roomId].length === 1) {
+    socket.join(playerRoomId);
+    roomsMap[playerRoomId][playerId] = {
+      socket,
+      playerId,
+      snakeGame: new SnakeGame(),
+    };
+    const players = Object.keys(roomsMap[playerRoomId]);
+    if (players.length === 1) {
       socket.emit('waitingForAnotherPlayer');
     }
 
-    if (roomsMap[roomId].length === 2) {
-      roomsMap[roomId].forEach((playerSocket) => {
-        playerSocket.emit('playersIsReady');
+    if (players.length === 2) {
+      players.forEach((playerId) => {
+        const { socket } = roomsMap[playerRoomId][playerId];
+        socket.emit('playersIsReady');
       });
-
-      startSnakeGame(roomId);
+      const fps = roomsMap[playerRoomId][playerId].snakeGame.fps;
+      const intervalId = setInterval(
+        () => startSnakeGame(playerRoomId), 1000 / fps
+      );
+      intervalMap[playerRoomId] = intervalId;
     }
+  });
+
+  socket.on('setSnakeDirection', ({ playerId, playerRoomId, directionKeyCode }) => {
+    const { snakeGame } = roomsMap[playerRoomId][playerId];
+    const [TOP, RIGHT, BOTTOM, LEFT] = [38, 39, 40, 37];
+    switch (directionKeyCode) {
+      case TOP:
+        if (snakeGame.snake.currentMoveDirection === BOTTOM) return;
+        snakeGame.snake.setDisplacement(0, -snakeGame.map.gridSize);
+        break;
+      case RIGHT:
+        if (snakeGame.snake.currentMoveDirection === LEFT) return;
+        snakeGame.snake.setDisplacement(snakeGame.map.gridSize, 0);
+        break;
+      case BOTTOM:
+        if (snakeGame.snake.currentMoveDirection === TOP) return;
+        snakeGame.snake.setDisplacement(0, snakeGame.map.gridSize);
+        break;
+      case LEFT:
+        if (snakeGame.snake.currentMoveDirection === RIGHT) return;
+        snakeGame.snake.setDisplacement(-snakeGame.map.gridSize, 0);
+        break;
+      default:
+        return;
+    }
+
+    snakeGame.isStartGame = true;
+    snakeGame.snake.currentMoveDirection = directionKeyCode;
   });
 });
 
-const startSnakeGame = (roomId) => {
-  roomsMap[roomId].forEach((playerSocket) => {
-    playerSocket.emit('updateSnakeGame', 'start');
-  });
+const startSnakeGame = (playerRoomId) => {
+  const players = Object.keys(roomsMap[playerRoomId]);
+  players.forEach((playerId, index) => {
+    const { socket, snakeGame } = roomsMap[playerRoomId][playerId];
+    const competitor = roomsMap[playerRoomId][players[index === 1 ? 0 : 1]];
 
-  setTimeout(() => {
-    requestAnimationFrame(() => startSnakeGame(roomId));
-  }, 1000 / 30);
+    if (snakeGame.snake.isAteApple(snakeGame.apple.position)) {
+      snakeGame.snake.addLength(1);
+      competitor.snakeGame.snake.addLength(2);
+      const nextApplePosition = snakeGame.generateNewApplePosition();
+      snakeGame.apple.position = nextApplePosition;
+    }
+    const nextSnakeHeadPosition = snakeGame.generateNextSnakePosition();
+
+    if (snakeGame.isStartGame && snakeGame.snake.isTouchBody(nextSnakeHeadPosition)) {
+      setSnakeGame(new SnakeGame({ ...snakeGame, isGameOver: true }));
+      return;
+    }
+    snakeGame.snake.headPosition = nextSnakeHeadPosition;
+
+    socket.emit('updateSnakeGame', { playerId, snakeGame });
+  });
 }
