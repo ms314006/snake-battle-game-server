@@ -53,7 +53,7 @@ io.on('connection', socket => {
       });
       const fps = roomsMap[playerRoomId][playerId].snakeGame.fps;
       const intervalId = setInterval(
-        () => startSnakeGame(playerRoomId), 1000 / fps
+        () => startSnakeGame(playerRoomId), 150
       );
       intervalMap[playerRoomId] = intervalId;
     }
@@ -103,11 +103,16 @@ const startSnakeGame = (playerRoomId) => {
     const nextSnakeHeadPosition = snakeGame.generateNextSnakePosition();
 
     if (snakeGame.isStartGame && snakeGame.snake.isTouchBody(nextSnakeHeadPosition)) {
+      /*
       setSnakeGame(new SnakeGame({ ...snakeGame, isGameOver: true }));
+      */
       return;
     }
     snakeGame.snake.headPosition = nextSnakeHeadPosition;
 
-    socket.emit('updateSnakeGame', { playerId, snakeGame });
+    socket.emit(
+      'updateSnakeGame',
+      { playerId, snakeGame, competitorSnakeGame: competitor.snakeGame }
+    );
   });
 }
