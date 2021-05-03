@@ -65,19 +65,19 @@ io.on('connection', socket => {
     switch (directionKeyCode) {
       case TOP:
         if (snakeGame.snake.currentMoveDirection === BOTTOM) return;
-        snakeGame.snake.setDisplacement(0, -snakeGame.map.gridSize);
+        snakeGame.snake.setDisplacement(0, -1);
         break;
       case RIGHT:
         if (snakeGame.snake.currentMoveDirection === LEFT) return;
-        snakeGame.snake.setDisplacement(snakeGame.map.gridSize, 0);
+        snakeGame.snake.setDisplacement(1, 0);
         break;
       case BOTTOM:
         if (snakeGame.snake.currentMoveDirection === TOP) return;
-        snakeGame.snake.setDisplacement(0, snakeGame.map.gridSize);
+        snakeGame.snake.setDisplacement(0, 1);
         break;
       case LEFT:
         if (snakeGame.snake.currentMoveDirection === RIGHT) return;
-        snakeGame.snake.setDisplacement(-snakeGame.map.gridSize, 0);
+        snakeGame.snake.setDisplacement(-1, 0);
         break;
       default:
         return;

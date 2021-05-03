@@ -4,7 +4,7 @@ class Apple {
   constructor(props) {
     const {
       appleSize = 0,
-      position = new Position(40, 40),
+      position = new Position(2, 2),
     } = props;
 
     this.appleSize = appleSize;

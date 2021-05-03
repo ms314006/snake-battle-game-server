@@ -12,11 +12,11 @@ class SnakeGame {
       isEndGame = false,
       isWinner = false,
       apple = new Apple({
-        appleSize: this.map.gridSize,
-        position: new Position(this.map.gridSize, this.map.gridSize),
+        appleSize: 1,
+        position: new Position(2, 2),
       }),
       snake = new Snake({
-        bodySize: this.map.gridSize - 2,
+        bodySize: 1,
         bodys: [new Position(this.map.centerPosition.x, this.map.centerPosition.y)],
       }),
       fps = 6,
@@ -44,8 +44,8 @@ class SnakeGame {
     let { x, y } = this.apple.position;
     do {
       [x, y] = [
-        Math.floor(Math.random() * this.map.columnSize) * this.map.gridSize,
-        Math.floor(Math.random() * this.map.rowSize) * this.map.gridSize,
+        Math.floor(Math.random() * this.map.columnSize),
+        Math.floor(Math.random() * this.map.rowSize),
       ];
     } while (!this.isEmptyPosition(x, y));
 
@@ -59,15 +59,15 @@ class SnakeGame {
     y += this.snake.yDisplacement;
 
     if (x < 0) {
-      x = this.map.gridScreenWidth - this.map.gridSize;
+      x = this.map.columnSize - 1;
     }
-    if (x > this.map.gridScreenWidth - 1) {
+    if (x > this.map.columnSize - 1) {
       x = 0;
     }
     if (y < 0) {
-      y = this.map.gridScreenWidth - this.map.gridSize;
+      y = this.map.rowSize - 1;
     }
-    if (y > this.map.gridScreenWidth - 1) {
+    if (y > this.map.rowSize - 1) {
       y = 0;
     }
     return new Position(x, y);
