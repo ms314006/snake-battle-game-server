@@ -90,7 +90,8 @@ io.on('connection', socket => {
 
 const startSnakeGame = (playerRoomId) => {
   const players = Object.keys(roomsMap[playerRoomId]);
-  players.forEach((playerId, index) => {
+
+  for (const [index, playerId] of players.entries()) {
     let { socket, snakeGame } = roomsMap[playerRoomId][playerId];
     const competitor = roomsMap[playerRoomId][players[index === 1 ? 0 : 1]];
 
@@ -119,6 +120,7 @@ const startSnakeGame = (playerRoomId) => {
       );
       clearInterval(intervalMap[playerRoomId]);
       delete intervalMap[playerRoomId];
+      break;
     }
     snakeGame.snake.headPosition = nextSnakeHeadPosition;
 
@@ -128,5 +130,5 @@ const startSnakeGame = (playerRoomId) => {
         { playerId, snakeGame, competitorSnakeGame: competitor.snakeGame }
       );
     }
-  });
+  }
 }
