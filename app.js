@@ -22,7 +22,7 @@ const intervalMap = {};
 
 io.on('connection', socket => {
   socketQueue.unshift(socket);
-  console.lof('current queue', socketQueue);
+  console.log('current queue', socketQueue);
   if (socketQueue.length >= 2) {
     const player1 = socketQueue.pop();
     const player2 = socketQueue.pop();
