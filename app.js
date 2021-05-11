@@ -5,13 +5,13 @@ const SnakeGame = require('./class/SnakeGame');
 const app = express();
 
 app.use(cors());
-
+const port = process.env.PORT || 3000;
 const server = require('http').Server(app)
-  .listen(3000,()=>{console.log('open server!')});
+  .listen(port,()=>{console.log('open server!')});
 
 const io = require('socket.io')(server, {
   cors: {
-    origin: '*',
+    origin: 'https://ms314006.github.io',
     methods: ['GET', 'POST']
   }
 });
